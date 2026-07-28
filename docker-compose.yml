@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  api:
+    build: .
+    command: uvicorn app:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - redis
+    restart: unless-stopped
+    # We map the models cache so it doesn't download on every docker build
+    volumes:
+      - huggingface_cache:/root/.cache/huggingface
+
+  frontend:
+    build: .
+    command: streamlit run frontend/app_streamlit.py --server.port 8501 --server.address 0.0.0.0
+    ports:
+      - "8501:8501"
+    environment:
+      - API_URL=http://api:8000/api/v1/search
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  huggingface_cache:
