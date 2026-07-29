@@ -15,7 +15,7 @@ st.set_page_config(
 
 st.title("📚 Book Semantic Search Engine V2")
 st.markdown("""
-Welcome to the production-grade Book Search Engine. 
+Welcome to the hybrid Book Search Engine. 
 This engine uses **Hybrid Search (BM25 + FAISS)** combined with **Cross-Encoder Reranking** for maximum accuracy.
 """)
 
