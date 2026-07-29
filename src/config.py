@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     INDEX_DIR: str = os.path.join(BASE_DIR, "data", "processed")
     RAW_DATA_FILE: str = "dummy_books.csv"
     PROCESSED_DATA_FILE: str = "processed_books.pkl"
+    DATABASE_URL: str = f"sqlite:///{os.path.join(BASE_DIR, 'data', 'books.db')}"
     
     # Model Configurations
     EMBEDDING_MODEL_NAME: str = "BAAI/bge-m3"

@@ -3,10 +3,13 @@ import json
 import hashlib
 import redis
 from typing import Optional
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Query, Request, Depends, BackgroundTasks
 from fastapi.concurrency import run_in_threadpool
+from sqlalchemy.orm import Session
 from src.config import settings
-from src.api.schemas import SearchResponse
+from src.api.schemas import SearchResponse, BookCreate, BookDB
+from src.db.database import get_db
+from src.db.models import Book
 
 router = APIRouter()
 
@@ -45,14 +48,14 @@ async def search_books(
         cached_result = redis_client.get(cache_key)
         if cached_result:
             latency = (time.time() - start_time) * 1000
-            # Cached result is already a JSON string, but we need to parse it back 
+            # Cached result is already a JSON string, parse it back 
             # to match the response_model, or return Response directly.
             # Returning parsed dict is easiest for Pydantic.
             results = json.loads(cached_result)
             return SearchResponse(query=q, latency_ms=latency, results=results)
             
     # 2. Not in cache, perform actual search
-    # We retrieve the search engine instance attached to the app state
+    # Retrieve the search engine instance attached to the app state
     search_engine = request.app.state.search_engine
     
     # Run the heavy, synchronous search function in a background thread
@@ -75,3 +78,25 @@ async def search_books(
             print(f"Failed to set cache: {e}")
             
     return SearchResponse(query=q, latency_ms=latency, results=results)
+@router.post('/books', response_model=BookDB)
+def create_book(book: BookCreate, db: Session = Depends(get_db)):
+    db_book = Book(title=book.title, author=book.author, genre=book.genre, synopsis=book.synopsis)
+    db.add(db_book)
+    db.commit()
+    db.refresh(db_book)
+    # Invalidate search cache
+    if REDIS_AVAILABLE:
+        redis_client.flushdb()
+    return db_book
+
+@router.post('/index/sync')
+async def sync_index(request: Request, background_tasks: BackgroundTasks):
+    from src.pipeline.preprocess import preprocess_data
+    from src.pipeline.build_index import run_indexing
+    def rebuild_job():
+        preprocess_data()
+        run_indexing()
+        # After rebuilding, refresh the search engine in memory
+        request.app.state.search_engine.reload_indices()
+    background_tasks.add_task(rebuild_job)
+    return {'message': 'Index rebuild started in background.'}

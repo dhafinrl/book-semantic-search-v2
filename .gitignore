@@ -29,3 +29,6 @@ data/processed/*.parquet
 .idea/
 *.swp
 *.swo
+
+# Databases
+*.db

@@ -13,3 +13,16 @@ class SearchResponse(BaseModel):
     query: str
     latency_ms: float
     results: List[BookResult]
+
+class BookCreate(BaseModel):
+    title: str
+    author: str
+    genre: str
+    synopsis: str
+
+class BookDB(BookCreate):
+    id: int
+
+    class Config:
+        from_attributes = True
+

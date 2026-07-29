@@ -44,8 +44,8 @@ def run_indexing():
     print("Building FAISS index...")
     dim = embeddings.shape[1]
     # BGE models use cosine similarity, which is equivalent to Inner Product (if normalized) 
-    # but IndexFlatL2 is also fine for standard nearest neighbors. We'll use L2 for simplicity,
-    # or IndexFlatIP if normalized. Let's stick to IndexFlatL2.
+    # but IndexFlatL2 is also fine for standard nearest neighbors. Use L2 for simplicity,
+    # or IndexFlatIP if normalized. Stick to IndexFlatL2.
     faiss_index = faiss.IndexFlatL2(dim)
     faiss_index.add(embeddings)
     
@@ -55,7 +55,7 @@ def run_indexing():
     
     # 3. Save Metadata
     metadata_path = os.path.join(settings.INDEX_DIR, settings.METADATA_STORE_NAME)
-    # We can save the dataframe to retrieve it later by index ID
+    # Save the dataframe to retrieve it later by index ID
     df.to_pickle(metadata_path)
     print(f"Metadata saved to {metadata_path}")
     

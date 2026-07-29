@@ -83,8 +83,16 @@ class HybridSearchEngine:
             row = self.metadata_df.iloc[idx]
             result_dict = row.to_dict()
             result_dict['score'] = score
-            # Remove rich_text from response if it's too large, but for now we can keep or drop it
+            # Remove rich_text from response if it's too large, but for now it can be kept or dropped
             # result_dict.pop('rich_text', None) 
             final_results.append(result_dict)
             
         return final_results
+
+    def reload_indices(self):
+        print('Reloading indices from disk...')
+        self.bm25_searcher = BM25Searcher()
+        self.vector_searcher = VectorSearcher()
+        metadata_path = os.path.join(settings.INDEX_DIR, settings.METADATA_STORE_NAME)
+        self.metadata_df = pd.read_pickle(metadata_path)
+        print('Reload complete.')

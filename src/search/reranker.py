@@ -3,7 +3,7 @@ from src.config import settings
 
 class CrossEncoderReranker:
     def __init__(self):
-        # We use CrossEncoder for reranking
+        # Use CrossEncoder for reranking
         self.model = CrossEncoder(settings.RERANKER_MODEL_NAME)
         
     def rerank(self, query: str, documents: list[str]) -> list[float]:
